@@ -34,6 +34,7 @@ detalhe da feature seja perdido no processo de migração.
 10. [Árvores de Decisão](#árvores-de-decisão)
 11. [Tratamento de Erros e Recuperação](#tratamento-de-erros-e-recuperação)
 12. [Recursos Disponíveis](#recursos-disponíveis)
+13. [Integração com Superpowers](#integração-com-superpowers)
 
 ---
 
@@ -127,6 +128,7 @@ EXTRA_INSTRUCTIONS = <instruções adicionais do usuário>
 AUTO_EXECUTE       = false  ← PADRÃO. Só muda para true se o usuário disser
                               explicitamente: "execute automaticamente", "auto-execute"
                               ou expressão equivalente no prompt original.
+USE_SUPERPOWERS    = <true|false>  ← definido na seção 0.4 abaixo
 ```
 
 > 🔒 **Regra de ouro:** Na dúvida sobre o nível de autonomia desejado, assuma
@@ -143,6 +145,53 @@ AUTO_EXECUTE       = false  ← PADRÃO. Só muda para true se o usuário disser
    - NÃO aborte a migração.
    - Em vez de usar os scripts `.py`, substitua o trabalho usando exaustivamente as ferramentas nativas `glob` e `grep_search` para simular as extrações de artefatos.
 
+### 0.4 — Superpowers Opt-in
+
+Após coletar o contexto obrigatório (seção 0.1), **antes de iniciar qualquer Phase**, perguntar ao usuário:
+
+```
+⚡ Você gostaria de usar a extensão Superpowers para guiar o planejamento
+   e execução desta migração?
+
+   Com Superpowers, o agente executa o fluxo canônico:
+     1. brainstorming  → spec salva em docs/superpowers/specs/
+     2. /write-plan    → plano salvo em docs/superpowers/plans/
+     3. /execute-plan  → batches com checkpoints de revisão
+
+   Este fluxo substitui o fluxo nativo das Phases 2.5, 3 e 4.
+
+   → Deseja ativar? (sim / não)
+```
+
+**Se usuário responder "sim":**
+
+1. Verificar disponibilidade da extensão:
+   ```bash
+   # Opção A — listar extensões instaladas no gemini-cli
+   gemini extensions list 2>/dev/null | grep -i superpowers
+
+   # Opção B — verificar existência do hook de sessão (indicação de instalação)
+   ls ~/.gemini/extensions/ 2>/dev/null | grep -i superpowers
+   ```
+
+2. **Se disponível →** `USE_SUPERPOWERS = true`
+   - Anunciar: "✅ Extensão Superpowers detectada. Fluxo ativo: brainstorming → /write-plan → /execute-plan."
+
+3. **Se indisponível →** informar e perguntar:
+   ```
+   ⚠️  A extensão Superpowers não foi detectada neste ambiente.
+
+   Opções:
+     A) Instalar agora:
+        gemini extensions install https://github.com/obra/superpowers
+     B) Continuar sem ela (fluxo nativo das Phases 3 e 4)
+
+   → Qual opção prefere?
+   ```
+   - Usuário escolhe instalar → re-verificar, depois `USE_SUPERPOWERS = true`
+   - Usuário escolhe continuar → `USE_SUPERPOWERS = false`
+
+**Se usuário responder "não":** `USE_SUPERPOWERS = false` — seguir fluxo nativo.
 
 ---
 
@@ -223,11 +272,60 @@ Verificar que os seguintes artefatos foram gerados:
 
 ---
 
+## Phase 2.5 — Brainstorming de Especificação (Superpowers)
+
+> 🔀 **Esta phase só existe quando `USE_SUPERPOWERS = true`.** Se `USE_SUPERPOWERS = false`, pular direto para Phase 3.
+
+**Objetivo:** Produzir uma especificação de design validada pelo usuário antes de gerar o plano de implementação. Segue o protocolo canônico da skill `superpowers:brainstorming`.
+
+**Announce:** "Estou usando a skill `superpowers:brainstorming` para refinar o design desta migração."
+
+### 2.5.1 — Contexto de Entrada para o Brainstorming
+
+Alimentar o brainstorming com os achados das Phases 1 e 2:
+
+```
+/brainstorm
+
+Estou migrando a feature [FEATURE_NAME] de [LEGACY_PATH] para [TARGET_PATH].
+
+Contexto do legado (extraído da arqueologia):
+- Propósito: [do overview.md]
+- Componentes: [lista do overview.md]
+- Regras de negócio críticas: [do business_rules.md]
+- Dependências externas: [do tech_design.md]
+- Débito técnico / riscos: [do overview.md]
+
+Instruções adicionais do usuário: [EXTRA_INSTRUCTIONS]
+```
+
+### 2.5.2 — Checklist do Brainstorming (seguir em ordem)
+
+1. **Explorar contexto do repo destino** — estrutura, convenções, stack
+2. **Perguntas clarificadoras** — uma por vez: abordagem de migração, testes, compatibilidade de API, etc.
+3. **Propor 2-3 abordagens** com trade-offs e recomendação
+4. **Apresentar design em seções** — aguardar aprovação por seção
+5. **Escrever spec/design doc** — salvar em:
+   ```
+   docs/superpowers/specs/YYYY-MM-DD-[FEATURE_NAME]-migration-design.md
+   ```
+6. **Self-review da spec** — checar placeholders, contradições, ambiguidade
+7. **Gate de revisão do usuário** — aguardar confirmação explícita antes de prosseguir
+
+### 2.5.3 — Gate de Aprovação da Spec
+
+> *"Spec escrita e commitada em `docs/superpowers/specs/YYYY-MM-DD-[FEATURE_NAME]-migration-design.md`.
+> Por favor revise e me diga se quer ajustes antes de começarmos o plano de implementação."*
+
+**⛔ NÃO avançar para Phase 3 sem aprovação explícita da spec pelo usuário.**
+
+---
+
 ## Phase 3 — Planejamento da Migração
 
 **Objetivo:** Produzir um plano de migração detalhado, ordenado e verificável antes de escrever qualquer código.
 
-**Delegado para:** subagente `@migration-architect`
+**Delegado para:** subagente `@migration-architect` (fluxo nativo) ou `superpowers:writing-plans` (fluxo Superpowers)
 
 ### 3.1 — Contexto a Passar para o Arquiteto
 
@@ -274,6 +372,48 @@ Consultar `skills/migration-mythos/references/MIGRATION_PATTERNS.md` e instruir 
 
 ### 3.3 — Gate de Aprovação do Plano ⛔ OBRIGATÓRIO
 
+> 🔀 **Bifurcação:** O comportamento desta seção depende de `USE_SUPERPOWERS`.
+
+---
+
+#### 3.3-A — SE `USE_SUPERPOWERS = true` → Fluxo via Superpowers `/write-plan`
+
+> **Pré-requisito:** A spec da Phase 2.5 deve estar aprovada antes de invocar `/write-plan`.
+
+**Announce:** "Estou usando a skill `superpowers:writing-plans` para gerar o plano de migração."
+
+1. **Invocar `/write-plan`** referenciando a spec gerada no brainstorming:
+
+   ```
+   /write-plan
+
+   Spec de referência: docs/superpowers/specs/YYYY-MM-DD-[FEATURE_NAME]-migration-design.md
+   ```
+
+   O Superpowers usará a spec como insumo primário e gerará o plano com:
+   - Header canônico com Goal, Architecture, Tech Stack
+   - Tasks bite-sized (2-5 min cada) com TDD (RED → GREEN → REFACTOR)
+   - Caminhos exatos de arquivo, código completo, comandos com output esperado
+   - Checkboxes `- [ ]` para rastreamento de progresso
+
+2. Plano salvo em:
+   ```
+   docs/superpowers/plans/YYYY-MM-DD-[FEATURE_NAME]-migration.md
+   ```
+
+3. **Self-review automático do plano** (Superpowers executa internamente):
+   - Cobertura da spec: todas as requirements têm task correspondente?
+   - Scan de placeholders: nenhum TBD, TODO, "implement later"
+   - Consistência de tipos e nomes entre tasks
+
+4. **Apresentar o plano ao usuário e aguardar aprovação** — o Superpowers faz isso; não pular.
+
+5. Após aprovação: seguir para **Phase 4-A** (execução via Superpowers).
+
+---
+
+#### 3.3-B — SE `USE_SUPERPOWERS = false` → Fluxo Nativo
+
 Antes de avançar para a execução, apresentar ao usuário o plano completo e aguardar
 resposta explícita. Este gate é **incondicional** — mesmo que `AUTO_EXECUTE = true`,
 o plano deve ser apresentado antes de qualquer escrita de código.
@@ -318,6 +458,42 @@ verificando cada passo antes de avançar.
 
 > 🔒 **Pré-condição obrigatória:** A Phase 4 só pode iniciar após confirmação explícita
 > do usuário no Gate 3.3. Se esta condição não foi satisfeita, retornar à Phase 3.
+
+> 🔀 **Bifurcação:** O comportamento desta fase depende de `USE_SUPERPOWERS`.
+
+---
+
+### 4-A — SE `USE_SUPERPOWERS = true` → Execução via Superpowers `/execute-plan`
+
+**Announce:** "Estou usando a skill `superpowers:executing-plans` para executar o plano de migração."
+
+**Executor:** Superpowers `executing-plans` skill
+
+**Processo:**
+1. Carregar o plano gerado em `docs/superpowers/plans/YYYY-MM-DD-<feature-name>-migration.md`
+2. Revisar criticamente o plano — levantar dúvidas ao usuário antes de iniciar
+3. Invocar o fluxo via comando:
+   ```
+   /execute-plan
+   ```
+4. Executar em **batches de 3 tasks** com checkpoints:
+   - Marcar tarefa como `in_progress`
+   - Seguir cada step do plano exatamente (TDD: test → fail → implement → pass → commit)
+   - Após cada batch: reportar o que foi implementado + output de verificação
+   - Aguardar feedback do usuário antes do próximo batch
+5. Se bloqueio mid-batch: **PARAR e escalar** (não adivinhar)
+6. Após todas as tasks: usar `superpowers:finishing-a-development-branch` para fechamento
+
+**Regras Superpowers que se aplicam durante a execução:**
+- Nunca pular verificações definidas no plano
+- Commits atômicos por task (conforme definido em 4.2)
+- Escalar obrigatoriamente conforme 4.5
+
+> Após conclusão da Phase 4-A, retomar o fluxo nativo na **Phase 5** (Validação).
+
+---
+
+### 4-B — SE `USE_SUPERPOWERS = false` → Fluxo Nativo
 
 **Executor:** main agent (este skill), com acesso a filesystem, bash e MCP servers
 
@@ -517,6 +693,7 @@ business_rules.md tem divergências entre versões documentadas?
 | Testes falham após migração | Modo debug do `@migration-validator`; relatório de diff comportamental |
 | MCP GitHub indisponível | Fallback completo para bash/git |
 | Feature abrange >50 arquivos | Dividir em sub-features; executar fases iterativamente |
+| Superpowers não instala / comando falha | Definir `USE_SUPERPOWERS = false`; prosseguir com fluxo nativo |
 
 ---
 
@@ -537,4 +714,84 @@ business_rules.md tem divergências entre versões documentadas?
 | Script: Validação | `skills/migration-mythos/scripts/validate_migration.py` | Validação automatizada |
 | Template de Relatório | `skills/migration-mythos/assets/migration_report_template.md` | Relatório final de migração |
 | Schema do Feature Map | `skills/migration-mythos/assets/feature_map_schema.json` | Schema JSON para feature maps |
+| Ext: Superpowers | `gemini extensions install https://github.com/obra/superpowers` | Brainstorming + planning TDD + execução em batches (opcional) |
+
+---
+
+## Integração com Superpowers
+
+A extensão [Superpowers](https://github.com/obra/superpowers) é uma integração **opcional** que adiciona as Phases 2.5 (brainstorming) e substitui as Phases 3 e 4 por workflows mais rigorosos baseados em TDD e revisão em batches. Segue o fluxo canônico: **spec → plano → execução**.
+
+### Quando Usar
+
+| Cenário | Recomendação |
+|---------|---------------|
+| Migração complexa com muitos componentes | Superpowers (spec + plano bite-sized facilita rastreamento) |
+| Time novo no destino (baixo conhecimento do repo) | Superpowers (brainstorming levanta dúvidas antes de codar) |
+| Migração rápida e feature simples | Fluxo nativo (menos overhead) |
+| Ambiente sem gemini-cli instalado | Fluxo nativo |
+
+### Instalação
+
+```bash
+gemini extensions install https://github.com/obra/superpowers
+```
+
+### Estrutura de Diretórios (Canônica do Superpowers)
+
+```
+docs/superpowers/
+├── specs/   ← design docs gerados pelo brainstorming
+│   └── YYYY-MM-DD-<feature>-migration-design.md
+└── plans/   ← planos gerados pelo writing-plans
+    └── YYYY-MM-DD-<feature>-migration.md
+```
+
+### Skills do Superpowers Utilizadas
+
+| Skill | Quando Ativada | O que Faz |
+|-------|---------------|----------|
+| `superpowers:brainstorming` | Phase 2.5 com `USE_SUPERPOWERS=true` | Refina design, gera spec em `docs/superpowers/specs/` |
+| `superpowers:writing-plans` | Phase 3 com `USE_SUPERPOWERS=true` | Gera plano bite-sized com TDD em `docs/superpowers/plans/` |
+| `superpowers:executing-plans` | Phase 4 com `USE_SUPERPOWERS=true` | Executa plano em batches com checkpoints |
+| `superpowers:finishing-a-development-branch` | Após Phase 4-A concluir | Verifica e encerra branch de migração |
+
+### Comandos Slash Relevantes
+
+| Comando | Equivalente Nativo |
+|---------|-------------------|
+| `/brainstorm` | Phase 2.5 (spec de design) |
+| `/write-plan` | Phase 3 (planning via `@migration-architect`) |
+| `/execute-plan` | Phase 4 (execução loop com auto-correção) |
+
+### Fluxo Completo com Superpowers
+
+```
+Phase 0 → opt-in? sim + disponível?
+   ↓ sim
+   USE_SUPERPOWERS = true
+   ↓
+Phase 1 → legacy-context-engineer    (inalterado)
+   ↓
+Phase 2 → legacy-feature-archaeologist    (inalterado)
+   ↓
+Phase 2.5 → superpowers:brainstorming via /brainstorm
+           → spec salva em docs/superpowers/specs/YYYY-MM-DD-<feature>-migration-design.md
+           → GATE: aprovação da spec pelo usuário (obrigatório)
+   ↓
+Phase 3 → superpowers:writing-plans via /write-plan
+         → referencia spec aprovada
+         → plano salvo em docs/superpowers/plans/YYYY-MM-DD-<feature>-migration.md
+         → self-review automático do plano
+         → GATE: aprovação do plano pelo usuário (obrigatório)
+   ↓
+Phase 4 → superpowers:executing-plans via /execute-plan
+         → batches de 3 tasks + checkpoints
+         → TDD: RED → GREEN → REFACTOR → commit por task
+         → superpowers:finishing-a-development-branch
+   ↓
+Phase 5 → @migration-validator    (inalterado)
+   ↓
+Phase 6 → relatório final    (inalterado)
+```
 
