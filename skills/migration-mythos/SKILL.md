@@ -86,6 +86,12 @@ e só avança para a próxima fase após validação de cada entregável.
 
 **Objetivo:** Estabelecer o briefing completo antes de qualquer ação.
 
+> ⚠️ **PRINCÍPIO FUNDAMENTAL DE AUTORIZAÇÃO**
+> Este orquestrador opera sob um modelo de **aprovação explícita**. Nenhum código será
+> escrito, modificado ou deletado sem que o usuário tenha revisado e aprovado o plano
+> de migração (Phase 3). O valor padrão de `AUTO_EXECUTE` é sempre **`false`** —
+> só é alterado para `true` se o usuário declarar isso explicitamente no prompt.
+
 <thinking>
 Antes de iniciar qualquer trabalho, preciso entender:
 1. O que exatamente deve ser migrado? (feature, módulo, subsistema, função específica?)
@@ -113,13 +119,18 @@ Antes de iniciar qualquer trabalho, preciso entender:
 Após a coleta de contexto, consolidar internamente:
 
 ```
-FEATURE_NAME    = <nome da feature>
-LEGACY_PATH     = <caminho do repo/diretório legado>
-TARGET_PATH     = <caminho do repo destino>
-MULTI_VERSION   = <true|false> (há múltiplos subdiretórios com versões?)
+FEATURE_NAME       = <nome da feature>
+LEGACY_PATH        = <caminho do repo/diretório legado>
+TARGET_PATH        = <caminho do repo destino>
+MULTI_VERSION      = <true|false> (há múltiplos subdiretórios com versões?)
 EXTRA_INSTRUCTIONS = <instruções adicionais do usuário>
-AUTO_EXECUTE    = <true|false> (o usuário aprovou execução automática?)
+AUTO_EXECUTE       = false  ← PADRÃO. Só muda para true se o usuário disser
+                              explicitamente: "execute automaticamente", "auto-execute"
+                              ou expressão equivalente no prompt original.
 ```
+
+> 🔒 **Regra de ouro:** Na dúvida sobre o nível de autonomia desejado, assuma
+> `AUTO_EXECUTE = false` e aguarde aprovação explícita antes de cada fase de execução.
 
 ### 0.3 — Pre-flight Check (Python & uv Dependency)
 
@@ -261,34 +272,52 @@ Consultar `skills/migration-mythos/references/MIGRATION_PATTERNS.md` e instruir 
 | Feature com muitos efeitos colaterais | Adapter + Shadow Mode |
 | Multi-versão com comportamentos conflitantes | Canonical Selection + Behavioral Spec |
 
-### 3.3 — Gate de Aprovação do Plano
+### 3.3 — Gate de Aprovação do Plano ⛔ OBRIGATÓRIO
 
-Antes de avançar para a execução, apresentar ao usuário:
+Antes de avançar para a execução, apresentar ao usuário o plano completo e aguardar
+resposta explícita. Este gate é **incondicional** — mesmo que `AUTO_EXECUTE = true`,
+o plano deve ser apresentado antes de qualquer escrita de código.
 
 ```
-📋 PLANO DE MIGRAÇÃO PRONTO
-
-Feature: [FEATURE_NAME]
-Origem: [LEGACY_PATH]
-Destino: [TARGET_PATH]
-Padrão escolhido: [PADRÃO]
-Total de tarefas: [N] etapas
-Complexidade estimada: BAIXA | MÉDIA | ALTA
-Riscos principais: [top 3 riscos]
-
-[Listagem das tarefas em alto nível]
-
-→ Posso prosseguir com a execução? (sim / ajustar plano / abortar)
+╔══════════════════════════════════════════════════════════════╗
+║              📋 PLANO DE MIGRAÇÃO — REVISÃO OBRIGATÓRIA      ║
+╠══════════════════════════════════════════════════════════════╣
+║ Feature    : [FEATURE_NAME]                                  ║
+║ Origem     : [LEGACY_PATH]                                   ║
+║ Destino    : [TARGET_PATH]                                   ║
+║ Padrão     : [PADRÃO ESCOLHIDO]                              ║
+║ Etapas     : [N] tarefas                                     ║
+║ Complexidade: BAIXA | MÉDIA | ALTA                           ║
+║ Riscos     : [top 3 riscos identificados]                    ║
+╠══════════════════════════════════════════════════════════════╣
+║ TAREFAS PLANEJADAS:                                          ║
+║ [Listagem numerada de todas as etapas em alto nível]         ║
+╠══════════════════════════════════════════════════════════════╣
+║ ⚠️  NENHUM CÓDIGO SERÁ ESCRITO OU MODIFICADO SEM SUA         ║
+║    APROVAÇÃO. Aguardando sua decisão:                        ║
+║                                                              ║
+║  ✅ "sim" / "pode executar" → inicia Phase 4                 ║
+║  ✏️  "ajustar" + instruções  → revisa o plano               ║
+║  ❌ "abortar"               → encerra a migração             ║
+╚══════════════════════════════════════════════════════════════╝
 ```
 
-**NÃO avançar para Phase 4 sem aprovação explícita do usuário,
-salvo se o prompt original contiver "execute automaticamente", "auto-execute" ou similar.**
+**⛔ BLOQUEIO ABSOLUTO: NÃO avançar para Phase 4 sem resposta afirmativa explícita
+do usuário neste gate — sem exceções, mesmo que `AUTO_EXECUTE = true`.**
+
+> A única exceção reconhecida é se o prompt original contiver a frase exata
+> "execute automaticamente" ou "auto-execute" **e** o usuário ratificar isso
+> ao ser apresentado ao resumo do plano.
 
 ---
 
 ## Phase 4 — Execução da Migração
 
-**Objetivo:** Executar o plano aprovado, etapa por etapa, verificando cada passo antes de avançar.
+**Objetivo:** Executar o plano **previamente aprovado pelo usuário no Gate 3.3**, etapa por etapa,
+verificando cada passo antes de avançar.
+
+> 🔒 **Pré-condição obrigatória:** A Phase 4 só pode iniciar após confirmação explícita
+> do usuário no Gate 3.3. Se esta condição não foi satisfeita, retornar à Phase 3.
 
 **Executor:** main agent (este skill), com acesso a filesystem, bash e MCP servers
 
