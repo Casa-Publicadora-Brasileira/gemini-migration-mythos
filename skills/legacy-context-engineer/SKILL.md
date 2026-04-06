@@ -69,15 +69,15 @@ Utilize as ferramentas `glob` e `grep_search` para extrair amostras físicas do 
 
 ### Etapa 3.1 — Estruturação de Pastas
 
-#### Etapa 3.1.1 - Verificação de existência de pasta
-Verifique se o diretório `documentacao/ai` (ou sinônimos, como `docs/ai`) existe na raiz do projeto legado mapeado. Caso não exista, crie-o utilizando a ferramenta `run_shell_command`.
+#### Etapa 3.1.1 - Tratamento de Sinônimos e Verificação de Pastas
+Busque primeiramente por pastas que representem documentação (sinônimos como `docs`, `documentation`, `documentacao`, `doc`) na raiz do projeto legado mapeado. Dentro da pasta encontrada (ou na principal se houver várias), verifique se existe o subdiretório `ai`. Caso não exista *nenhum* sinônimo de documentação, crie o padrão `documentacao/ai`. Se a pasta base já existir, apenas crie o subdiretório `ai` se necessário. (Use `run_command` com `mkdir -p` de forma idempotente).
 
-#### Etapa 3.1.2 - Verificação de existência de arquivos
-Verifique se os arquivos `GEMINI.md`, `ai-context.md` e `ai-discovery-guidelines.md` existem na raiz do diretório `documentacao/ai` (ou sinônimos, como `docs/ai`). Caso não existam, crie-os utilizando a ferramenta `write_file`.
+#### Etapa 3.1.2 - Verificação de Arquivos e Idempotência
+Verifique se os arquivos `GEMINI.md`, `ai-context.md` e `ai-discovery-guidelines.md` já existem. **Regra de Idempotência:** NUNCA recrie pastas ou arquivos que já existem. Se o arquivo existir, mescle ou atualize o conteúdo apenas se houver informações novas, preservando a estrutura existente sem sobreescrever destrutivamente. Caso não existam, crie-os utilizando a ferramenta `write_file`.
 
 ### Etapa 3.2 — Gravação Segura
 
-Escreva os 3 arquivos finais garantindo que todas as métricas, arquivos citados e abordagens sejam específicos da tecnologia e do diretório mapeado.
+Escreva (ou atualize) os 3 arquivos finais garantindo que todas as métricas, arquivos citados e abordagens sejam específicos da tecnologia e do diretório mapeado.
 
 </phase>
 

@@ -166,7 +166,11 @@ Só prossiga se os 5 checks forem satisfeitos.
 
 ## ESPECIFICAÇÃO DE SAÍDA
 
-Gere **exatamente 3 arquivos**. Toda afirmação deve ser sustentada por evidência concreta: caminho do artefato, trecho de código, bloco de configuração, comando, query, contrato ou linha relevante.
+Gere **exatamente 3 arquivos** (`overview.md`, `business_rules.md`, `tech_design.md`). Toda afirmação deve ser sustentada por evidência concreta: caminho do artefato, trecho de código, bloco de configuração, comando, query, contrato ou linha relevante.
+
+**Regras de Gravação (Idempotência e Localização):**
+1. **Sinônimos de Documentação:** Antes de salvar, busque por pastas de documentação existentes na raiz (`docs`, `documentation`, `documentacao`, `doc`). Salve os artefatos dentro do diretório correspondente.
+2. **Idempotência (Não Recriar):** Verifique se os arquivos já existem. Em caso positivo, NUNCA sobreescreva destrutivamente ou recrie do zero. Leia o conteúdo existente e anexe ou atualize com as descobertas da sessão atual preservando o histórico.
 
 ---
 
