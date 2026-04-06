@@ -17,6 +17,25 @@ Realizar uma análise exaustiva, baseada em evidências, de uma feature específ
 
 ## PROTOCOLO DE EXECUÇÃO
 
+<phase id="0" name="Verificação de Idempotência Inicial">
+
+Antes de investigar a codebase, busque pela pasta base de documentação (sinônimos como `docs`, `documentation`, `documentacao`, `doc`) na **raiz primária / pasta pai** e verifique se os artefatos `overview.md`, `business_rules.md` e `tech_design.md` já existem na pasta correspondente da feature (`features/[nome_da_feature]/`).
+
+**Regra de Idempotência:** Se ALGUM dos 3 arquivos já existir, você DEVE interromper imediatamente a execução e perguntar:
+
+```
+⚠️ Os arquivos desta feature já existem no diretório. Você deseja:
+1. Sobrescrever (reescrever do zero, refazendo a arqueologia)
+2. Fazer mesclagem (atualizar o arquivo existente com as novas descobertas)
+3. Ignorar/Pular (manter como está e encerrar)
+```
+
+**⛔ BLOQUEIO:** Aguarde a resposta do usuário antes de iniciar as consultas na base. Se escolher 3, encerre com sucesso, devolvendo que o contexto já estava mapeado. Se 1 ou 2, prossiga para a Phase 1 registrando a intenção de gravação para a Especificação de Saída.
+
+</phase>
+
+---
+
 <phase id="1" name="Mapeamento de Superfície">
 
 **REGRA: não leia arquivos completos nesta fase. Faça descoberta estrutural primeiro.**
@@ -173,16 +192,10 @@ Gere **exatamente 3 arquivos** (`overview.md`, `business_rules.md`, `tech_design
    - A documentação gerada DEVE ficar isolada na sua própria pasta: ex. `docs/features/[nome_da_feature]/`.
    - **MUITO IMPORTANTE:** Busque pela pasta base de documentação (sinônimos: `docs`, `documentation`, `documentacao`, `doc`) SEMPRE na **raiz primária / pasta pai**. Se o legado for multi-versão ou multi-módulo (ex: tem pastas `v1/`, `v2/`, ou `front/`, `back/`), a pasta de documentação deve estar no nível PAI de todos eles, e NÃO espalhada dentro de cada micro-versão.
    - Se nenhuma existir, crie o padrão `documentacao/features/[nome_da_feature]/` na raiz pai. Salve os 3 artefatos apenas dentro deste diretório.
-2. **Idempotência (Aprovação Obrigatória):** Verifique se os arquivos já existem. Em caso positivo, NUNCA sobreescreva destrutivamente ou atualize de forma autônoma. Se ALGUM dos 3 arquivos já existir, você DEVE interromper a gravação e perguntar:
-
-```
-⚠️ Os arquivos desta feature já existem no diretório. Você deseja:
-1. Sobrescrever (reescrever do zero, apagando o histórico)
-2. Fazer mesclagem (atualizar o arquivo com as novas descobertas)
-3. Ignorar/Pular (manter como está)
-```
-
-**⛔ BLOQUEIO:** Aguarde a resposta do usuário antes de executar a ação. Só prossiga após confirmação.
+2. **Idempotência (Execução):** 
+   - Resgate a intenção gravada no gate da Phase 0. 
+   - Se a decisão foi sobrescrever, crie-os com seu write de confiança.
+   - Se a decisão foi mesclagem, faça um append/merge cirúrgico sem perder o histórico do arquivo já presente nesta pasta.
 
 ---
 

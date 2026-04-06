@@ -16,6 +16,25 @@ Mapear exaustivamente um diretório ou ecossistema legado específico, identific
 
 ## PROTOCOLO DE EXECUÇÃO
 
+<phase id="0" name="Verificação de Idempotência Inicial">
+
+Antes de iniciar qualquer varredura com o `@codebase_investigator` (Phase 1), faça uma busca por pastas de documentação (alvo da Etapa 3.1.1) e verifique se os arquivos `GEMINI.md`, `ai-context.md` e `ai-discovery-guidelines.md` já existem.
+
+**Regra de Idempotência:** Se QUALQUER arquivo existir, você DEVE parar IMEDIATAMENTE e perguntar ao usuário:
+
+```
+⚠️ Os arquivos de contexto já existem. Você deseja:
+1. Sobrescrever (reescrever do zero, refazendo a varredura)
+2. Fazer mesclagem (atualizar sem perder o que já existe)
+3. Ignorar/Pular a varredura (já temos o contexto necessário)
+```
+
+**⛔ BLOQUEIO:** Aguarde a resposta do usuário. Se ele escolher 3, encerre a skill com sucesso sem invocar o codebase-investigator. Se 1 ou 2, prossiga para a Phase 1 guardando essa intenção de gravação para a Phase 3.
+
+</phase>
+
+---
+
 <phase id="1" name="Topografia e Reconhecimento Estrutural">
 
 **REGRA: Aja de forma isolada. Nunca misture contextos de diretórios irmãos.**
@@ -72,17 +91,11 @@ Utilize as ferramentas `glob` e `grep_search` para extrair amostras físicas do 
 #### Etapa 3.1.1 - Tratamento de Sinônimos e Verificação de Pastas
 Busque primeiramente por pastas que representem documentação (sinônimos como `docs`, `documentation`, `documentacao`, `doc`) na raiz do projeto legado mapeado. Dentro da pasta encontrada (ou na principal se houver várias), verifique se existe o subdiretório `ai`. Caso não exista *nenhum* sinônimo de documentação, crie o padrão `documentacao/ai`. Se a pasta base já existir, apenas crie o subdiretório `ai` se necessário. (Use `run_command` com `mkdir -p` de forma idempotente).
 
-#### Etapa 3.1.2 - Verificação de Arquivos e Gate de Confirmação
-Verifique se os arquivos `GEMINI.md`, `ai-context.md` e `ai-discovery-guidelines.md` já existem. **Regra de Idempotência:** NUNCA recrie pastas ou arquivos que já existem silenciosamente. Se QUALQUER arquivo existir, você DEVE interromper o processo e perguntar explicitamente ao usuário:
-
-```
-⚠️ Os arquivos de contexto já existem. Você deseja:
-1. Sobrescrever (reescrever do zero)
-2. Fazer mesclagem (atualizar sem perder o que já existe)
-3. Ignorar/Pular a geração desta etapa
-```
-
-**⛔ BLOQUEIO:** Aguarde a resposta do usuário antes de realizar qualquer gravação. Siga exatamente a opção escolhida. Caso os arquivos não existam, pode criá-os normalmente com `write_file`.
+#### Etapa 3.1.2 - Idempotência e Confirmação de Ação
+Resgate a decisão do usuário obtida no gate da Phase 0. 
+- Se a escolha foi sobrescrever, crie-os utilizando a ferramenta `write_file`.
+- Se a escolha foi mesclar, atualize o conteúdo apenas com as novas descobertas.
+- Caso os arquivos não existissem na Phase 0, apenas crie-os normalmente.
 
 ### Etapa 3.2 — Gravação Segura
 
