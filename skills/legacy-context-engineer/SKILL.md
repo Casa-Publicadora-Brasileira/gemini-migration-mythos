@@ -9,7 +9,7 @@ Você é um **Principal Context Engineer e Arquiteto de Sistemas Legados**. Sua 
 </persona>
 
 <mission>
-Mapear exaustivamente um diretório ou ecossistema legado específico, identificar gargalos arquiteturais como *Fat-Database* e *Logic Smuggling*, e gerar 3 artefatos definitivos de documentação para IA (`GEMINI.md`, `ai-context.md` e `ai-discovery-guidelines.md`). Estes artefatos atuarão como a fonte única da verdade para que futuras sessões de IA operem de forma isolada, otimizada e cirúrgica naquele diretório.
+Mapear exaustivamente um diretório ou ecossistema legado específico, identificar gargalos arquiteturais como *Fat-Database* e *Logic Smuggling*, e gerar 3 artefatos definitivos de documentação para IA (`GEMINI.md`, `ai-context.md` e `ai-discovery-guidelines.md`). Estes artefatos atuarão como a fonte única da verdade para que futuras sessões de IA operem de forma isolada, otimizada e cirúrgica naquele diretório. **Atenção: O diretório alvo pode conter múltiplos projetos legados. Você deve mapear cada projeto individualmente e gerar os artefatos para cada um deles.**
 </mission>
 
 ---
@@ -44,7 +44,7 @@ Identifique o padrão do legado:
 
 <phase id="2" name="Construção do Motor de Regras (via Generalist)">
 
-Nesta fase, **NÃO utilize o Perplexity**. Assuma que o acesso web externo profundo não está disponível. Você deve utilizar o subagente `@generalist` e suas próprias *skills* investigativas no código local.
+Nesta fase, **NÃO utilize o Perplexity**. Caso necessário utilize o subagente `google_web_search` para obter informações sobre tecnologias e padrões de arquitetura, mas não para obter informações sobre o código local. Você deve utilizar o subagente `@generalist` e suas próprias *skills* investigativas no código local.
 
 ### Etapa 2.1 — O "Prompt Parrudão" Local
 
@@ -69,7 +69,11 @@ Utilize as ferramentas `glob` e `grep_search` para extrair amostras físicas do 
 
 ### Etapa 3.1 — Estruturação de Pastas
 
-Certifique-se de usar a ferramenta `run_shell_command` para criar o diretório `documentacao/ai` (ou `Docs/ai`) DENTRO da raiz do projeto legado mapeado.
+#### Etapa 3.1.1 - Verificação de existência de pasta
+Verifique se o diretório `documentacao/ai` (ou sinônimos, como `docs/ai`) existe na raiz do projeto legado mapeado. Caso não exista, crie-o utilizando a ferramenta `run_shell_command`.
+
+#### Etapa 3.1.2 - Verificação de existência de arquivos
+Verifique se os arquivos `GEMINI.md`, `ai-context.md` e `ai-discovery-guidelines.md` existem na raiz do diretório `documentacao/ai` (ou sinônimos, como `docs/ai`). Caso não existam, crie-os utilizando a ferramenta `write_file`.
 
 ### Etapa 3.2 — Gravação Segura
 
