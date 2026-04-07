@@ -1,7 +1,7 @@
 [project]
 name = "gemini-migration-mythos"
-version = "1.1.4"
-description = "Add your description here"
+version = "1.1.5"
+description = "Bundle de migração ponta-a-ponta: inclui Orquestrador (Migration Mythos), Engenharia de Contexto Legado e Arqueologia de Features."
 readme = "README.md"
 authors = [
     { name = "Eduardo Batista", email = "63757526+Edwardmaster7@users.noreply.github.com" }
