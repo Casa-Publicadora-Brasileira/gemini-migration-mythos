@@ -10,7 +10,7 @@ Focado em resiliência de engenharia e preservação de histórico, ele conta co
 
 **1. Instale a extensão do orquestrador via repositório:**
 ```bash
-gemini extensions install https://github.com/Edwardmaster7/gemini-migration-mythos.git
+gemini extensions install https://github.com/Casa-Publicadora-Brasileira/gemini-migration-mythos.git
 ```
 
 **2. [OPCIONAL, PORÉM RECOMENDADO] Instale a extensão de execução TDD:**
