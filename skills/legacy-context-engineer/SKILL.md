@@ -47,6 +47,7 @@ Acione o subagente `@codebase_investigator` restrito EXCLUSIVAMENTE ao diretóri
 - Os pontos de entrada (Entry Points, ex: `.dpr`, `Application.java`, `Main.cpp`).
 - Estrutura de pastas principais (ex: `Source`, `Procedures`, `Controllers`).
 - Tecnologias e integrações chave aparentes (ex: Correios, Cielo, WMS, APIs de terceiros).
+- **Acoplamento Inter-Domínios**: Quais outros sistemas, projetos ou grandes domínios da corporação este monolito consume para funcionar? (ex: API legada de vendas consumindo DLLs de estoque ou banco de contas).
 
 ### Etapa 1.2 — Diagnóstico Arquitetural Rápido
 
@@ -175,6 +176,9 @@ O contexto profundo de negócio e dimensões.
 ## 4. Integrações de Missão Crítica
 - [Nome da Integração A]: [Qual arquivo ou API cuida disso (ex: Correios, Bancos, WMS)].
 - [Nome da Integração B]: [Qual arquivo ou API cuida disso].
+
+## 5. Dependências Inter-Domínios (Feature-Dependencies)
+- **Domínios/Sistemas Requeridos**: [Liste os sistemas legados/domínios que bloqueiam ou atuam como pré-requisitos lógicos para este (ex: *Requer migração prévia do Módulo Fiscal, pois chama a sp_fiscal_tax diretamente*)].
 ```
 
 </output_file>
