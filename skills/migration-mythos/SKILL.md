@@ -129,6 +129,7 @@ AUTO_EXECUTE       = false  ← PADRÃO. Só muda para true se o usuário disser
                               explicitamente: "execute automaticamente", "auto-execute"
                               ou expressão equivalente no prompt original.
 USE_SUPERPOWERS    = <true|false>  ← definido na seção 0.4 abaixo
+PENDING_MIGRATIONS = []     ← Pilha (Stack) para pausar/retomar migrações dependentes
 ```
 
 > 🔒 **Regra de ouro:** Na dúvida sobre o nível de autonomia desejado, assuma
@@ -289,7 +290,24 @@ Verificar que os seguintes artefatos foram gerados ou que já existem previament
 - `business_rules.md` — regras de negócio com evidências concretas, cenários Gherkin
 - `tech_design.md` — design técnico, dicionário de dados, acoplamentos, efeitos colaterais
 
-**Ler estes 3 arquivos antes de iniciar a Phase 3 (ou 2.5).** Eles são o insumo primário do planejamento.
+**Ler estes 3 arquivos antes de iniciar a Phase 2.1.** Eles são o insumo primário da orquestração e planejamento.
+
+---
+
+## Phase 2.1 — Gate de Priorização e Restrição de Contexto
+
+**Objetivo:** Interceptar dependências críticas e gerenciar a fila (stack) de prioridade antes de despender tokens no planejamento e design.
+
+1. Leia ativamente a seção `## Dependências Bloqueantes (Outras Features/Domínios)` do `overview.md` gerado pela Phase 2.
+2. Liste as dependências encontradas.
+3. Se houver pre-requisitos bloqueantes, realize uma estimativa heurística da complexidade (Baixa, Média, Alta) desses pre-requisitos.
+4. Peça autorização do usuário paralisando a Phase atual:
+   > *"A feature atual [FEATURE_X] possui dependência funcional direta de [FEATURE_Y] (Complexidade Alta). Recomendo focar primeiro na migração de [FEATURE_Y] para não retermos débitos ocultos. Deseja aplicar o **Context Reset** e migrar a feature bloqueante primeiro?"*
+5. Se o usuário escolher "Sim":
+   - **Stack Push**: Faça push de `[FEATURE_X]` para a lista `PENDING_MIGRATIONS`.
+   - **Modify Target**: Altere o contexto ativo (`FEATURE_NAME = [FEATURE_Y]`).
+   - **Worktrees (Superpowers isolation)**: Se `USE_SUPERPOWERS=true`, acione compulsoriamente a skill `superpowers:using-git-worktrees` para isolar a sub-migração em uma branch e pasta desatreladas, deixando que a extensão lide com a abstração do source control. Não tente rodar comandos de `git worktree add` manualmente na unha.
+   - **Reset**: Retorne o fluxo inteiramente para a **Phase 1**, instruindo o `legacy-context-engineer` a mapear `[FEATURE_Y]` do absoluto zero. 
 
 ---
 
@@ -648,7 +666,7 @@ Usar o template em `skills/migration-mythos/assets/migration_report_template.md`
 
 ### 6.1 — Conteúdo do Relatório
 
-1. **Executive Summary** — o quê foi migrado, de onde, para onde, quando
+1. **Executive Summary** — o quê foi migrado, de onde, para onde, quando *(Se migrou advindo de uma pausa de prioridade do contexto, obrigatoriamente inclua: "Este relatório trata de um pré-requisito e migração prévia exigida para a liberação da feature alvo original [FEATURE_X]")*.
 2. **Archaeology Findings** — insights-chave sobre a feature legada (referências ao overview.md)
 3. **Migration Decisions** — decisões arquiteturais tomadas e justificativas
 4. **Changes Made** — lista de todos os arquivos criados, modificados, deletados
@@ -671,6 +689,15 @@ Salvar como: `MIGRATION_REPORT_<FEATURE_NAME>_<YYYYMMDD>.md`
    - body: link para o MIGRATION_REPORT + resumo dos achados principais
    - base: branch principal do repo destino
 ```
+
+### 6.4 — Fluxo de Retomada (Popping the Stack)
+
+1. Após a geração/finalização da migração (seja pelo fluxo nativo ou via fechamento de branch pela Phase 4 do Superpowers), avalie o cofre `PENDING_MIGRATIONS`.
+2. Se a pilha NÃO estiver vazia (ex: `['Feature X']`):
+   - Faça Pop da última feature pausada e mude `FEATURE_NAME` de volta para `Feature X`.
+   - Comunique ao usuário: *"A migração dependente [FEATURE_Y] finalizou no relatório. Sua pendência original [FEATURE_X] teve seus bloqueios eliminados. Retomando context de migração..."*
+   - Volte para o repositório principal de trabalho/worktree correta da Feature X.
+   - Pule direto para a **Phase 2.5** (se usando Superpowers) executando `/brainstorm` para Feature X com a nova branch e o novo contexto que [FEATURE_Y] já existe. Ou Phase 3 (se nativo).
 
 ---
 

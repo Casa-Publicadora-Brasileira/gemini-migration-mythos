@@ -114,6 +114,14 @@ Identifique onde o sistema estabelece consistência ou falha em estabelecê-la:
 - operações parcialmente persistidas
 - dependências entre etapas
 
+### Etapa 2.4 — Mapeamento de Dependências Funcionais
+Identifique outras **features ou domínios internos** que atuam como blocos de construção ou pré-requisitos lógicos para esta feature:
+
+- chamadas de rede para APIs internas (outras sub-sistemas)
+- consumo de dados gerados exclusivamente por outra feature (tabelas mestras, filas de domínio)
+- dependências de bibliotecas de negócio customizadas (core modules)
+- regras bloqueantes (ex: o carrinho precisa da feature de desconto calculada, logo, depende da feature de descontos).
+
 </phase>
 
 ---
@@ -227,6 +235,10 @@ Gere **exatamente 3 arquivos** (`overview.md`, `business_rules.md`, `tech_design
 | Artefato | Integração | Fonte | Efeito |
 |----------|------------|-------|--------|
 
+## Dependências Bloqueantes (Outras Features/Domínios)
+| Feature Requerida | Motivo/Acoplamento | Nível de Bloqueio |
+|-------------------|--------------------|-------------------|
+
 ## Fluxo Principal de Execução
 [Descreva o fluxo real da feature, ponta a ponta.]
 
@@ -304,6 +316,9 @@ Then [falha / bloqueio / rollback / efeito]
 |-----------|----------|------------------------|--------------------|
 
 ## Acoplamentos e Efeitos Colaterais
+
+### Dependências de Contrato (Inter-Features)
+- [Descrição de qual API/Código de outra feature é consumido e como o contrato funciona]
 
 ### Integrações Invisíveis
 - [integração ou efeito colateral]
