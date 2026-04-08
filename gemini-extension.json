@@ -1,5 +1,6 @@
 {
     "name": "migration-mythos",
-    "description": "Orchestrates end-to-end migrations from legacy systems to modern targets. Includes Native/TDD (Superpowers) flows, Idempotent Context Engine, and Domain Archaeologist skills.",
-    "version": "1.4.0"
+    "version": "1.5.0",
+    "description": "Bundle de migração ponta-a-ponta: integra Orquestrador inteligente, fluxo opcional TDD (Superpowers), Engenharia Idempotente de Legados e Arqueologia de Domínios.",
+    "author": "Eduardo Batista"
 }
